@@ -33,3 +33,5 @@ class Zlib(AutotoolsPackage):
     url = "http://zlib.net/zlib-1.2.8.tar.gz"
 
     version('1.2.8', '44d667c142d7cda120332623eab69f40')
+    version('1.2.7', 'f01a02a630f6495a59cd2001293d0130',
+            url='http://zlib.net/fossils/zlib-1.2.7.3.tar.gz')
