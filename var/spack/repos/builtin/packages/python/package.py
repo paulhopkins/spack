@@ -254,7 +254,7 @@ class Python(Package):
 
         # For run time environment set only the path for
         # extension_spec and prepend it to PYTHONPATH
-        if extension_spec.package.extends(self.spec):
+        if extension_spec.package.extends(self.spec) and not extension_spec.package.activated:
             run_env.prepend_path('PYTHONPATH', join_path(
                 extension_spec.prefix, self.site_packages_dir))
 
