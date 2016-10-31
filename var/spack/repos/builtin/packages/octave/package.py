@@ -38,6 +38,7 @@ class Octave(Package):
 
     extendable = True
 
+    version('4.0.3', '941bb1fc981a4abf58ae9e438bb13dd1')
     version('4.0.2', 'c2a5cacc6e4c52f924739cdf22c2c687')
     version('4.0.0', 'a69f8320a4f20a8480c1b278b1adb799')
 
