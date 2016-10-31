@@ -36,6 +36,8 @@ class Texlive(Package):
     # update in synchrony.
     version('live', '6d171d370f3a2f2b936b9b0c87e8d0fe',
             url="http://ctan.math.utah.edu/ctan/tex-archive/systems/texlive/tlnet/install-tl-unx.tar.gz")
+    version('2016', '829c60e7caebd0981969adcaf1c903be',
+            url='ftp://tug.org/historic/systems/texlive/2016/install-tl-unx.tar.gz')
 
     # There does not seem to be a complete list of schemes.
     # Examples include:
