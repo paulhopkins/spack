@@ -45,6 +45,7 @@ class Sqlite(Package):
         config = ["--prefix=" + prefix]
         if self.get_arch() == 'ppc64le':
             config.append("--build=powerpc64le-redhat-linux-gnu")
+        config.append('--disable-tcl')
         configure(*config)
         make()
         make("install")
