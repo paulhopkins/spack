@@ -25,6 +25,8 @@
 from llnl.util.tty.colify import colify
 import llnl.util.tty as tty
 import spack
+from ordereddict_backport import OrderedDict
+
 
 description = "List available versions of a package"
 
@@ -32,7 +34,9 @@ description = "List available versions of a package"
 def setup_parser(subparser):
     subparser.add_argument('package', metavar='PACKAGE',
                            help='Package to list versions for')
-
+    subparser.add_argument(
+        '--keep-stage', action='store_true',
+        help="Don't clean up staging area when command completes.")
 
 def versions(parser, args):
     pkg = spack.repo.get(args.package)
@@ -54,3 +58,48 @@ def versions(parser, args):
             print "  Found no unckecksummed versions for %s" % pkg.name
     else:
         colify(sorted(remote_versions, reverse=True), indent=2)
+
+        # Fetch tarballs (prompting user if necessary)
+        versions, urls = fetch_tarballs(pkg.url, pkg.name, sorted(remote_versions, reverse=True)[0])
+
+        ver_hash_tuples = spack.cmd.checksum.get_checksums(
+            versions, urls,
+            keep_stage=args.keep_stage)
+        
+        if not ver_hash_tuples:
+            tty.die("Could not fetch any tarballs for %s" % name)
+
+        print make_version_calls(ver_hash_tuples)
+
+def fetch_tarballs(url, name, version):
+    """Try to find versions of the supplied archive by scraping the web.
+    Prompts the user to select how many to download if many are found."""
+    versions = spack.util.web.find_versions_of_archive(url)
+    rkeys = sorted(versions.keys(), reverse=True)
+    versions = OrderedDict(zip(rkeys, (versions[v] for v in rkeys)))
+
+    archives_to_fetch = 1
+    if not versions:
+        # If the fetch failed for some reason, revert to what the user provided
+        versions = {version: url}
+    elif len(versions) > 1:
+        tty.msg("Found %s versions of %s:" % (len(versions), name),
+                *spack.cmd.elide_list(
+                    ["%-10s%s" % (v, u) for v, u in versions.iteritems()]))
+        print
+        archives_to_fetch = tty.get_number(
+            "Include how many checksums in the package file?",
+            default=5, abort='q')
+
+        if not archives_to_fetch:
+            tty.die("Aborted.")
+
+    sorted_versions = sorted(versions.keys(), reverse=True)
+    sorted_urls = [versions[v] for v in sorted_versions]
+    return sorted_versions[:archives_to_fetch], sorted_urls[:archives_to_fetch]
+
+def make_version_calls(ver_hash_tuples):
+    """Adds a version() call to the package for each version found."""
+    max_len = max(len(str(v)) for v, h in ver_hash_tuples)
+    format = "    version(%%-%ds, '%%s')" % (max_len + 2)
+    return '\n'.join(format % ("'%s'" % v, h) for v, h in ver_hash_tuples)
