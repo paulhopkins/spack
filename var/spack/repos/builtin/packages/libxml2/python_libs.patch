@@ -1,0 +1,11 @@
+--- a/configure	2016-11-11 15:12:27.475792345 +0000
++++ b/configure	2016-11-11 15:13:44.788783186 +0000
+@@ -14129,7 +14129,7 @@
+ 	fi
+     fi
+     pythondir='$(PYTHON_SITE_PACKAGES)'
+-    PYTHON_LIBS=`python$PYTHON_VERSION-config --ldflags`
++    PYTHON_LIBS=`python$PYTHON_VERSION-config --ldflags` `pkg-config python --libs`
+ else
+     PYTHON=
+ fi
