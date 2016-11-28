@@ -72,4 +72,4 @@ db = Database(root)
 # This controls how spack lays out install prefixes and
 # stage directories.
 #
-layout = YamlDirectoryLayout(root)
+layout = YamlDirectoryLayout(root, hash_len=20)
