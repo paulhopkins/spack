@@ -312,7 +312,7 @@ class Python(Package):
 
         return match_predicate(ignore_arg, patterns)
 
-    def write_easy_install_pth(self, exts):
+    def write_easy_install_pth(self, exts, prefix=None):
         paths = []
         for ext in sorted(exts.values()):
             ext_site_packages = join_path(ext.prefix, self.site_packages_dir)
@@ -336,7 +336,7 @@ class Python(Package):
 
                     paths.append(line)
 
-        site_packages = join_path(self.prefix, self.site_packages_dir)
+        site_packages = join_path(prefix or self.prefix, self.site_packages_dir)
         main_pth = join_path(site_packages, "easy-install.pth")
 
         if not paths:

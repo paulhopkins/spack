@@ -65,8 +65,11 @@ brett.viren@gmail.com ca 2016.
 
 import os
 import re
+import tempfile
 import spack
 import spack.cmd
+from spack import *
+import yaml
 import llnl.util.tty as tty
 
 description = "Produce a single-rooted directory view of a spec."
@@ -184,9 +187,9 @@ def check_one(spec, path, verbose=False):
     dotspack = os.path.join(path, '.spack', spec.name)
     if os.path.exists(os.path.join(dotspack)):
         tty.info('Package in view: "%s"' % spec.name)
-        return
+        return True
     tty.info('Package not in view: "%s"' % spec.name)
-    return
+    return False
 
 
 def remove_one(spec, path, verbose=False):
@@ -213,6 +216,52 @@ def remove_one(spec, path, verbose=False):
                 continue
             os.unlink(dst)
 
+def write_extensions(path, extensions):
+    path  = join_path(path, ".spack", "extensions.yaml")
+    # Create a temp file in the same directory as the actual file.
+    dirname, basename = os.path.split(path)
+    tmp = tempfile.NamedTemporaryFile(
+        prefix=basename, dir=dirname, delete=False)
+
+    # write tmp file
+    with tmp:
+        yaml.dump({
+            'extensions': [
+                {ext.name: {
+                    'hash': ext.dag_hash(),
+                    'path': str(ext.prefix)
+                }} for ext in sorted(extensions.values())]
+        }, tmp, default_flow_style=False)
+
+    # Atomic update by moving tmpfile on top of old one.
+    os.rename(tmp.name, path)
+
+def read_extensions(path, spec):
+    path  = join_path(path, ".spack", "extensions.yaml")
+    if not os.path.exists(path):
+        return {}
+
+    by_hash = spack.store.layout.specs_by_hash()
+    exts = {}
+    with open(path) as ext_file:
+        yaml_file = yaml.load(ext_file)
+        for entry in yaml_file['extensions']:
+            name = next(iter(entry))
+            dag_hash = entry[name]['hash']
+            prefix   = entry[name]['path']
+            
+            if dag_hash not in by_hash:
+                raise InvalidExtensionSpecError(
+                "Spec %s not found in %s" % (dag_hash, prefix))
+
+            ext_spec = by_hash[dag_hash]
+            if prefix != ext_spec.prefix:
+                raise InvalidExtensionSpecError(
+                    "Prefix %s does not match spec hash %s: %s"
+                    % (prefix, dag_hash, ext_spec))
+
+            exts[ext_spec.name] = ext_spec
+    return exts
 
 def link_one(spec, path, link=os.symlink, verbose=False):
     'Link all files in `spec` into directory `path`.'
@@ -224,6 +273,27 @@ def link_one(spec, path, link=os.symlink, verbose=False):
 
     if verbose:
         tty.info('Linking package: "%s"' % spec.name)
+
+    if spec.package.is_extension:
+        # Link extendee first
+        if not check_one(spec.package.extendee_spec, path, verbose=False):
+            link_one(spec.package.extendee_spec, path, link, verbose)
+        for s in spec.traverse(root=False):
+            if s.package.extends(spec.package.extendee_spec):
+                if not check_one(s, path, verbose=False):
+                    link_one(s, path, link, verbose)
+
+            
+        ignore = spec.package.extendee_spec.package.python_ignore(spec.package, {})
+        exts = read_extensions(path, spec.package.extendee_spec)
+        #exts = spack.install_layout.extension_map(self.spec)
+        exts[spec.name] = spec
+        spec.package.extendee_spec.package.write_easy_install_pth(exts, path)
+        write_extensions(path, exts)
+        
+    else:
+        ignore = lambda x: False
+
     for dirpath, dirnames, filenames in os.walk(spec.prefix):
         if not filenames:
             continue        # avoid explicitly making empty dirs
@@ -234,13 +304,15 @@ def link_one(spec, path, link=os.symlink, verbose=False):
         for fname in filenames:
             src = os.path.join(dirpath, fname)
             dst = os.path.join(targdir, fname)
+            if ignore(src):
+                continue
             if os.path.exists(dst):
+                print dst,
                 if '.spack' in dst.split(os.path.sep):
                     continue    # silence these
                 tty.warn("Skipping existing file: %s" % dst)
                 continue
             link(src, dst)
-
 
 def visitor_symlink(specs, args):
     'Symlink all files found in specs'
