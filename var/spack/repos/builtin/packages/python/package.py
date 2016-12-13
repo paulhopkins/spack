@@ -333,7 +333,10 @@ class Python(Package):
                     if ((ext.name != 'py-setuptools' and
                          re.search(r'setuptools.*egg$', line))):
                         continue
-
+                    if re.search(r'^/', line):
+                        print "skipping", line
+                        continue
+ 
                     paths.append(line)
 
         site_packages = join_path(prefix or self.prefix, self.site_packages_dir)
