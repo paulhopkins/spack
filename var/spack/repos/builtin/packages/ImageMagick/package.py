@@ -53,5 +53,5 @@ class Imagemagick(Package):
         configure('--prefix={0}'.format(prefix),
                   '--with-gs-font-dir={0}'.format(gs_font_dir))
         make()
-        make('check')
+        #make('check')
         make('install')
