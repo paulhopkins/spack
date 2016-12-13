@@ -32,6 +32,7 @@ class Root(Package):
     homepage = "https://root.cern.ch"
     url      = "https://root.cern.ch/download/root_v6.07.02.source.tar.gz"
 
+    version('6.08.00', '8462a530d27fa5ca7718ea4437632c3c')
     version('6.06.06', '4308449892210c8d36e36924261fea26')
     version('6.06.04', '55a2f98dd4cea79c9c4e32407c2d6d17')
     version('6.06.02', 'e9b8b86838f65b0a78d8d02c66c2ec55')
@@ -41,6 +42,7 @@ class Root(Package):
         patch('root6-60606-mathmore.patch', when='@6.06.06')
 
     variant('graphviz', default=False, description='Enable graphviz support')
+    variant('x11', default=False, description='Enable X11 support')
 
     depends_on("cmake", type='build')
     depends_on("pcre")
@@ -66,7 +68,7 @@ class Root(Package):
         options.append('-Dcxx14=on')
         options.append('-Dcocoa=off')
         options.append('-Dbonjour=off')
-        options.append('-Dx11=on')
+        options.append('-Dx11=%s' % ('on' if '+x11' in spec else 'off',))
         options.extend(std_cmake_args)
         if sys.platform == 'darwin':
             darwin_options = [
