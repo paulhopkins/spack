@@ -60,7 +60,7 @@ class Hdf5(AutotoolsPackage):
 
     depends_on('mpi', when='+mpi')
     depends_on('szip', when='+szip')
-    depends_on('zlib@1.1.2:')
+    depends_on('zlib')
 
     @AutotoolsPackage.precondition('configure')
     def validate(self):

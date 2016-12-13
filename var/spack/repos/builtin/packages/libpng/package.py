@@ -38,7 +38,7 @@ class Libpng(Package):
     version('1.4.19', '89bcbc4fc8b31f4a403906cf4f662330')
     version('1.2.56', '9508fc59d10a1ffadd9aae35116c19ee')
 
-    depends_on('zlib@1.0.4:')  # 1.2.5 or later recommended
+    depends_on('zlib')  # 1.2.5 or later recommended
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

@@ -41,7 +41,7 @@ class Hdf(Package):
 
     depends_on('jpeg@6b:')
     depends_on('szip', when='+szip')
-    depends_on('zlib@1.1.4:')
+    depends_on('zlib')
 
     depends_on('bison', type='build')
     depends_on('flex',  type='build')

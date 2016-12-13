@@ -60,7 +60,7 @@ class Netcdf(Package):
     depends_on('parallel-netcdf', when='@4.2.1.1:+parallel-netcdf')
 
     # Required for NetCDF-4 support
-    depends_on("zlib@1.2.5:")
+    depends_on("zlib")
     depends_on('hdf5')
 
     # NetCDF 4.4.0 and prior have compatibility issues with HDF5 1.10 and later
