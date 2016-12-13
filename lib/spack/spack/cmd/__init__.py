@@ -165,6 +165,8 @@ def ask_for_confirmation(message):
 def gray_hash(spec, length):
     return colorize('@K{%s}' % spec.dag_hash(length))
 
+def blue_version(spec):
+    return colorize("%s{%s}" % (spack.spec.version_color, spec.version))
 
 def display_specs(specs, **kwargs):
     mode = kwargs.get('mode', 'short')
@@ -172,7 +174,7 @@ def display_specs(specs, **kwargs):
     namespace = kwargs.get('namespace', False)
     flags = kwargs.get('show_flags', False)
     variants = kwargs.get('variants', False)
-
+    
     hlen = 7
     if kwargs.get('very_long', False):
         hashes = True
@@ -216,9 +218,112 @@ def display_specs(specs, **kwargs):
                 print(spec.tree(
                     format=format_string,
                     color=True,
+                    deptypes=('build', 'link', 'run'),
                     indent=4,
                     prefix=(lambda s: gray_hash(s, hlen)) if hashes else None))
 
+        elif any([i.startswith(mode) for i in ['html', 'doku', 'cli']]):
+            MODE='html'
+            insert_cell=True
+            row_span=""
+            table_start=""
+            table_end=""
+            row_begin = ''
+            row_end = ''    
+            if 'doku'.startswith(mode):
+                hash_format = "|{0:<28.28}"
+                hashvers_format = "|{0:<25.25}"
+                package_format = "|{0:<27.27}"
+                cell_format = "|{0:<17.17}"
+                version_format = "|{0:<14.14}"
+                variant_format = "| {0:<24.24}"
+                extend_text = '    :::'
+                row_end = '|'            
+            elif 'html'.startswith(mode):
+                table_start="<table>"
+                table_end="</table>"
+                row_begin = '<tr>'
+                row_end = '</tr>'                
+                hash_format = "<td>{0:<28.28}</td>"
+                hashvers_format = "<td>{0:<39.39}</td>"
+                package_format = "<td rowspan='%s'>{0:<17.17}</td>"
+                cell_format = "<td>{0:<17.17}</td>"
+                version_format = "<td>{0:<28.28}</td>"
+                variant_format = "<td>{0:<27.27}</td>"
+                extend_text = '<td></td>'
+                insert_cell=False
+            else:
+                hash_format = "|{0:<28.28}"
+                hashvers_format = "|{0:<39.39}"
+                package_format = "|{0:<17.17}"
+                cell_format = "|{0:<17.17}"
+                version_format = "|{0:<28.28}"
+                variant_format = "| {0:<27.27}"
+                extend_text = ''
+
+                
+            packages = []
+            for spec in specs:
+                for s in spec.traverse():
+                    if s.name not in packages:
+                        packages.append(s.name)
+
+            if hashes:
+                format_func = lambda spec: "%s %s" % (blue_version(spec), gray_hash(spec, hlen))
+            else:
+                format_func = blue_version
+
+            print table_start
+            for package in packages:
+                variants_set = set()
+                if variants:
+                    for spec in specs:
+                        if package in spec:
+                            variants_set.update(spec[package].variants.keys())
+
+                print row_begin,
+                if insert_cell:
+                    print package_format.format(package),
+                else:
+                    print package_format.format(package) % (len(variants_set) + 1 + int(hashes)),
+                for spec in specs:
+                    if package in spec:
+                        print hashvers_format.format(blue_version(spec[package])),
+                    else:
+                        print cell_format.format(""),
+                print row_end
+
+                if hashes:
+                    print row_begin,
+                    if insert_cell:
+                        print package_format.format(extend_text),
+                    for spec in specs:
+                        if package in spec:
+                            print hashvers_format.format(gray_hash(spec[package], hlen)),
+                        else:
+                            print cell_format.format(""),
+                    print row_end
+
+
+                #                        if hashes:
+#                            print hashvers_format.format(gray_hash(spec[package], hlen)+" "+colorize("%s{%s}" % (spack.spec.version_color, spec[package].version))),                        
+#                        else:
+#                            print version_format.format(colorize("%s{%s}" % (spack.spec.version_color, spec[package].version))),
+
+
+                if variants:
+                    for variant in sorted(variants_set):
+                        print row_begin,
+                        if insert_cell:
+                            print package_format.format(extend_text),
+                        for spec in specs:
+                            if package in spec:
+                                print variant_format.format(spack.spec.colorize_spec(spec[package].variants.get(variant, ''))),
+                            else:
+                                print cell_format.format(""),
+                        print row_end
+            print table_end
+                
         elif mode == 'short':
             # Print columns of output if not printing flags
             if not flags:
@@ -242,4 +347,4 @@ def display_specs(specs, **kwargs):
         else:
             raise ValueError(
                 "Invalid mode for display_specs: %s. Must be one of (paths,"
-                "deps, short)." % mode)
+                "deps, short, html, doku, cli)." % mode)

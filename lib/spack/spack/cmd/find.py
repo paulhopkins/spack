@@ -45,6 +45,11 @@ def setup_parser(subparser):
                               dest='mode',
                               const='paths',
                               help='Show paths to package install directories')
+    format_group.add_argument('-t', '--tabular',
+#                              action='store_const',
+                              dest='mode',
+#                              const='tabular',
+                              help='Show specs in a combined table')
     format_group.add_argument(
         '-d', '--deps',
         action='store_const',
@@ -122,6 +127,7 @@ def find(parser, args):
     # Display the result
     if sys.stdout.isatty():
         tty.msg("%d installed packages." % len(query_specs))
+
     display_specs(query_specs,
                   mode=args.mode,
                   long=args.long,
