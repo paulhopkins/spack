@@ -149,7 +149,7 @@ class FileCache(object):
                 if value:
                     # remove tmp on exception & raise it
                     shutil.rmtree(cm.tmp_filename, True)
-                    raise value
+                    raise ValueError,value
                 else:
                     os.rename(cm.tmp_filename, cm.orig_filename)
 
