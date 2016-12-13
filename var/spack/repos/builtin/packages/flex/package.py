@@ -40,6 +40,10 @@ class Flex(AutotoolsPackage):
     depends_on("m4", type='build')
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
+    depends_on('gettext', type='build')
+    depends_on('automake', type='build')
+    depends_on('texinfo', type='build')
+    depends_on('help2man', type='build')
     
     def url_for_version(self, version):
         base_url = "https://github.com/westes/flex/archive"
