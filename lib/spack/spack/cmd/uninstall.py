@@ -165,7 +165,7 @@ def get_uninstall_list(args):
         specs = spack.cmd.parse_specs(args.packages)
     # Gets the list of installed specs that match the ones give via cli
     # takes care of '-a' is given in the cli
-    uninstall_list = concretize_specs(specs, args.all, args.force)
+    uninstall_list = specs#concretize_specs(specs, args.all, args.force)
     # Takes care of '-d'
     dependent_list = installed_dependents(uninstall_list)
     # Process dependent_list and update uninstall_list
