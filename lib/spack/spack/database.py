@@ -652,6 +652,9 @@ class Database(object):
 
         """
         concrete_specs = self.query(query_spec, known, installed)
+        if len(concrete_specs) > 1:
+            print query_spec, known, installed
+            print concrete_specs
         assert len(concrete_specs) <= 1
         return concrete_specs[0] if concrete_specs else None
 
