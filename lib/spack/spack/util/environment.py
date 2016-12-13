@@ -25,7 +25,7 @@
 import os
 
 system_paths = ['/', '/usr/', '/usr/local']
-suffixes = ['lib', 'lib64', 'include']
+suffixes = ['lib', 'lib64', 'include', 'share']
 system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths]
 system_bins = [os.path.join(p, 'bin') for p in system_paths]
 

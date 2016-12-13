@@ -333,11 +333,12 @@ def set_build_environment_variables(pkg, env, dirty=False):
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
-    for pre in dep_prefixes:
-        for directory in ('lib', 'lib64', 'share'):
-            pcdir = join_path(pre, directory, 'pkgconfig')
-            if os.path.isdir(pcdir):
-                env.prepend_path('PKG_CONFIG_PATH', pcdir)
+    dirs = [join_path(p, s) for s in ('lib', 'lib64', 'share')
+            for p in dep_prefixes]
+    for directory in filter_system_paths(dirs):
+        pcdir = join_path(directory, 'pkgconfig')
+        if os.path.isdir(pcdir):
+            env.prepend_path('PKG_CONFIG_PATH', pcdir)
 
     if pkg.spec.architecture.target.module_name:
         load_module(pkg.spec.architecture.target.module_name)
