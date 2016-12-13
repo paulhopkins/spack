@@ -50,5 +50,5 @@ class Pixman(Package):
         configure(*config_args)
 
         make()
-        make('check')
+        #make('check')
         make('install')
